@@ -1,4 +1,4 @@
-#include(QZXing/QZXing.pri)
+include(QZXing/QZXing.pri)
 
 QT       += core gui
 

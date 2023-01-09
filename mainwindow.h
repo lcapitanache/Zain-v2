@@ -36,6 +36,8 @@ private slots:
 
     //Funciones
     int getCheckDigit(QString s);
+    QString getFolio();
+    QImage getQrCode(QString s);
 
     //Métodos
     void clearOutput();
@@ -45,6 +47,7 @@ private slots:
     void showAboutInfo();
     void showAllData();
     void showCheckDigit(QString s);
+    void showFolio();
 
 private:
     Ui::MainWindow *ui;

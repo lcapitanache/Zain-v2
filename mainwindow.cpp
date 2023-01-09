@@ -1,10 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-//#include "QZXing.h"
+#include "QZXing.h"
 
 #include <QMessageBox>
 #include <QDebug>
 #include <QStringList>
+#include <QDateTime>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -26,9 +27,6 @@ MainWindow::MainWindow(QWidget *parent)
                    " folio JSMF/2023.01.08/7.212247." \
                    " Creado por Luis Capitanache el día" \
                    " domingo, 08 de enero de 2023 a las 21:22:47.";
-
-    //QImage barcode = QZXing::encodeData(data);
-    //barcode.save("QrCode.jpg");
 }
 
 MainWindow::~MainWindow()
@@ -116,6 +114,52 @@ void MainWindow::showCheckDigit(QString s)
     }
 }
 
+void MainWindow::showFolio()
+{
+    QString folio;
+    QString message;
+
+    folio = getFolio();
+
+    message = "Número de folio\n" \
+              "---------------\n\n";
+
+    message += folio;
+
+    ui->edtOutput->setText(message);
+    ui->lblInformation->setText("Listo");
+
+    getQrCode(folio);
+
+    //QLabel label("<img src='..\\QrCode.jpg'/>");
+    //label.show();
+}
+
+QString MainWindow::getFolio()
+{
+    QDateTime now;
+    QLocale local;
+    QString folio;
+
+    local = QLocale(QLocale::Spanish, QLocale::Mexico);
+    now = QDateTime::currentDateTime();
+
+    folio = "JSMF/";
+    folio += local.toString(now, "yyyy.MM.dd");
+    folio += "/" + QString::number(now.date().dayOfWeek());
+    folio += "." + local.toString(now, "hhmmss");
+
+    return folio;
+}
+
+QImage MainWindow::getQrCode(QString s)
+{
+    QImage qrCode = QZXing::encodeData(s);
+    qrCode.save("QrCode.jpg");
+
+    return qrCode;
+}
+
 bool MainWindow::nssIsValid(QString s)
 {
     QRegExp re("\\d*");
@@ -180,11 +224,12 @@ void MainWindow::on_edtInput_returnPressed()
     QStringList input;
     QString cmd;
 
-    commands << "a" << "about" << "acerca";  // 0 a 2
-    commands << "l" << "list" << "listar";   // 3 a 5
-    commands << "d" << "digit" << "digito";  // 6 a 8
-    commands << "c" << "clear" << "limpiar"; // 9 a 11
-    commands << "q" << "quit" << "salir";    // 12 a 14
+    commands << "a" << "about" << "acerca";  //  0-2
+    commands << "l" << "list" << "listar";   //  3-5
+    commands << "d" << "digit" << "digito";  //  6-8
+    commands << "c" << "clear" << "limpiar"; //  9-11
+    commands << "q" << "exit" << "salir";    // 12-14
+    commands << "f" << "folio";              // 15-16
 
     lastInput = ui->edtInput->text();
     input = lastInput.split(" ");
@@ -211,19 +256,25 @@ void MainWindow::on_edtInput_returnPressed()
             errWrongNumberOfArguments(cmd);
         else
             showCheckDigit(input.value(1));
-      break;
+        break;
       case 9 ... 11:
         if (input.size() > 1)
             errWrongNumberOfArguments(cmd);
         else
             clearOutput();
-      break;
+        break;
       case 12 ... 14:
         if (input.size() > 1)
             errWrongNumberOfArguments(cmd);
          else
              exitApp();
-       break;
+        break;
+      case 15 ... 16:
+        if (input.size() > 1)
+          errWrongNumberOfArguments(cmd);
+        else
+           showFolio();
+        break;
       default:
         errUnknownCommand(cmd);
         break;
