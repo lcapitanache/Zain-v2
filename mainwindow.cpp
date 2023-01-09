@@ -17,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("athena.db");
 
-    getAllData();
+    showAllData();
 }
 
 MainWindow::~MainWindow()
@@ -25,7 +25,30 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::getAllData()
+void MainWindow::clearOutput()
+{
+    ui->edtOutput->clear();
+    ui->lblInformation->clear();
+}
+
+void MainWindow::showAboutInfo()
+{
+    QString about;
+
+    about = "Zaín mark 2\n" \
+            "Sistema de captura de incapacidades\n\n" \
+            "Instituto Mexicano del Seguro Social\n" \
+            "Unidad de Medicina Familiar N.° 36\n\n" \
+            "© 2023 Luis Capitanache\n" \
+            "lcapitanache@gmail.com\n" \
+            "https://lcapitanache.github.io/\n\n" \
+            "Qt 5.9.9 | MinGW 32 bits";
+
+    ui->edtOutput->setText(about);
+    ui->lblInformation->setText("Acerca de Zaín v2");
+}
+
+void MainWindow::showAllData()
 {
     QSqlQuery query;
     QString data = "";
@@ -54,64 +77,129 @@ void MainWindow::getAllData()
     db.close();
 }
 
-void MainWindow::getAboutInfo()
+void MainWindow::showCheckDigit(QString s)
 {
-    QString about;
+    if (nssIsValid(s))
+    {
+        QString mensaje;
 
-    about = "Zaín mark 2\n"
-            "Sistema de captura de incapacidades\n\n" \
-            "Instituto Mexicano del Seguro Social\n" \
-            "Unidad de Medicina Familiar N.° 36\n\n" \
-            "© 2023 Luis Capitanache\n" \
-            "lcapitanache@gmail.com\n" \
-            "https://lcapitanache.github.io/\n\n" \
-            "Qt 5.9.9 | MinGW 32 bits";
+        mensaje = "Cálculo de dígito verificador\n" \
+                  "-----------------------------\n\n" \
+                  "NSS:\t" + s + "\n" \
+                  "Dígito:\t" + QString::number(getCheckDigit(s));
 
-    ui->edtOutput->setText(about);
-    ui->lblInformation->setText("Acerca de Zaín v2");
+        ui->edtOutput->setText(mensaje);
+        ui->lblInformation->setText("Listo");
+    }
+    else
+    {
+        errBadNss(s);
+    }
 }
 
-void MainWindow::unknownCommand(QString s)
+bool MainWindow::nssIsValid(QString s)
 {
-    ui->edtOutput->setText("Comando no reconocido: " + s);
+    QRegExp re("\\d*");
+
+    return (re.exactMatch(s) && (s.size() == 10));
+}
+
+int MainWindow::getCheckDigit(QString s)
+{
+    int i;
+    int tmp = 0;
+    int sumatory = 0;
+    int topTen = 0;
+    int checkDigit = 0;
+
+    for (i = 0; i<= 9; i++)
+    {
+        tmp = s.at(i).digitValue();
+
+        if (i % 2 != 0)
+        {
+            tmp *= 2;
+
+            if (tmp > 9)
+                tmp -= 9;
+        }
+
+        sumatory += tmp;
+    }
+
+    topTen = ((sumatory/10) + 1) * 10;
+
+    checkDigit = topTen - sumatory;
+
+    if (checkDigit == 10)
+        checkDigit = 0;
+
+    return checkDigit;
+}
+
+void MainWindow::errBadNss(QString s)
+{
+    ui->edtOutput->setText(s + " no es un NSS válido");
     ui->lblInformation->setText("Error");
 }
 
-void MainWindow::wrongNumberOfArguments()
+void MainWindow::errUnknownCommand(QString s)
 {
-    ui->edtOutput->setText("Número de argumentos equivocado");
+    ui->edtOutput->setText(s + ": Comando no reconocido");
+    ui->lblInformation->setText("Error");
+}
+
+void MainWindow::errWrongNumberOfArguments(QString s)
+{
+    ui->edtOutput->setText(s + ": Número de argumentos equivocado");
     ui->lblInformation->setText("Error");
 }
 
 void MainWindow::on_edtInput_returnPressed()
 {
-    QStringList options;
+    QStringList commands;
     QStringList input;
+    QString cmd;
 
-    options << "a" << "about" << "acerca";
-    options << "l" << "list" << "listar";
+    commands << "a" << "about" << "acerca";  // 0 a 2
+    commands << "l" << "list" << "listar";   // 3 a 5
+    commands << "d" << "digit" << "digito";  // 6 a 8
+    commands << "c" << "clear" << "limpiar"; // 9 a 11
 
-    input = ui->edtInput->text().split(" ");
+    lastInput = ui->edtInput->text();
+    input = lastInput.split(" ");
+    cmd = input.value(0);
 
     ui->edtInput->clear();
     ui->edtOutput->clear();
 
-    switch(options.indexOf(input.value(0))){
+    switch(commands.indexOf(cmd)){
       case 0 ...2:
         if (input.size() > 1)
-            wrongNumberOfArguments();
+            errWrongNumberOfArguments(cmd);
         else
-            getAboutInfo();
-
+            showAboutInfo();
         break;
       case 3 ... 5:
         if (input.size() > 1)
-            wrongNumberOfArguments();
+            errWrongNumberOfArguments(cmd);
         else
-            getAllData();
+            showAllData();
         break;
+      case 6 ... 8:
+        if (input.size() != 2)
+            errWrongNumberOfArguments(cmd);
+        else
+            showCheckDigit(input.value(1));
+      break;
+      case 9 ... 11:
+        if (input.size() > 1)
+            errWrongNumberOfArguments(cmd);
+        else
+            clearOutput();
+      break;
       default:
-        unknownCommand(input.value(0));
+        errUnknownCommand(cmd);
         break;
     }
 }

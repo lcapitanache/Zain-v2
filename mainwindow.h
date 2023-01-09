@@ -16,16 +16,34 @@ class MainWindow : public QMainWindow
 
 public:
     QSqlDatabase db;
+    QString lastInput;
+
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
-    void getAllData();
-    void getAboutInfo();
-    void unknownCommand(QString s);
-    void wrongNumberOfArguments();
 
+    //Errores
+    void errBadNss(QString s);
+    void errUnknownCommand(QString s);
+    void errWrongNumberOfArguments(QString s);
+
+    //Eventos
     void on_edtInput_returnPressed();
+
+    //Flags
+    bool nssIsValid(QString s);
+
+    //Funciones
+    int getCheckDigit(QString s);
+
+    //Métodos
+    void clearOutput();
+
+    //Métodos de mensaje
+    void showAboutInfo();
+    void showAllData();
+    void showCheckDigit(QString s);
 
 private:
     Ui::MainWindow *ui;
