@@ -1,8 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+//#include "QZXing.h"
+
 #include <QMessageBox>
 #include <QDebug>
 #include <QStringList>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,11 +21,27 @@ MainWindow::MainWindow(QWidget *parent)
     db.setDatabaseName("athena.db");
 
     showAllData();
+
+    QString data = "Oficio de incapacidades iniciales" \
+                   " folio JSMF/2023.01.08/7.212247." \
+                   " Creado por Luis Capitanache el día" \
+                   " domingo, 08 de enero de 2023 a las 21:22:47.";
+
+    //QImage barcode = QZXing::encodeData(data);
+    //barcode.save("QrCode.jpg");
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::exitApp()
+{
+    if (db.open())
+        db.close();
+
+    QApplication::quit();
 }
 
 void MainWindow::clearOutput()
@@ -35,14 +54,14 @@ void MainWindow::showAboutInfo()
 {
     QString about;
 
-    about = "Zaín mark 2\n" \
+    about = "Zaín v2\n" \
             "Sistema de captura de incapacidades\n\n" \
             "Instituto Mexicano del Seguro Social\n" \
             "Unidad de Medicina Familiar N.° 36\n\n" \
             "© 2023 Luis Capitanache\n" \
             "lcapitanache@gmail.com\n" \
             "https://lcapitanache.github.io/\n\n" \
-            "Qt 5.9.9 | MinGW 32 bits";
+            "Qt 5.9.9 | MinGW 53 | x86 | 32-bits";
 
     ui->edtOutput->setText(about);
     ui->lblInformation->setText("Acerca de Zaín v2");
@@ -81,14 +100,14 @@ void MainWindow::showCheckDigit(QString s)
 {
     if (nssIsValid(s))
     {
-        QString mensaje;
+        QString message;
 
-        mensaje = "Cálculo de dígito verificador\n" \
+        message = "Cálculo de dígito verificador\n" \
                   "-----------------------------\n\n" \
                   "NSS:\t" + s + "\n" \
                   "Dígito:\t" + QString::number(getCheckDigit(s));
 
-        ui->edtOutput->setText(mensaje);
+        ui->edtOutput->setText(message);
         ui->lblInformation->setText("Listo");
     }
     else
@@ -165,6 +184,7 @@ void MainWindow::on_edtInput_returnPressed()
     commands << "l" << "list" << "listar";   // 3 a 5
     commands << "d" << "digit" << "digito";  // 6 a 8
     commands << "c" << "clear" << "limpiar"; // 9 a 11
+    commands << "q" << "quit" << "salir";    // 12 a 14
 
     lastInput = ui->edtInput->text();
     input = lastInput.split(" ");
@@ -198,6 +218,12 @@ void MainWindow::on_edtInput_returnPressed()
         else
             clearOutput();
       break;
+      case 12 ... 14:
+        if (input.size() > 1)
+            errWrongNumberOfArguments(cmd);
+         else
+             exitApp();
+       break;
       default:
         errUnknownCommand(cmd);
         break;

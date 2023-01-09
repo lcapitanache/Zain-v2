@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow
 
 public:
     QSqlDatabase db;
-    QString lastInput;
+    QString lastInput; //TODO: Implementar último comando
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -39,6 +39,7 @@ private slots:
 
     //Métodos
     void clearOutput();
+    void exitApp();
 
     //Métodos de mensaje
     void showAboutInfo();
