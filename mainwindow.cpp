@@ -23,10 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     showAllData();
 
-    QString data = "Oficio de incapacidades iniciales" \
-                   " folio JSMF/2023.01.08/7.212247." \
-                   " Creado por Luis Capitanache el día" \
-                   " domingo, 08 de enero de 2023 a las 21:22:47.";
+    QString data = "Oficio de incapacidades iniciales " \
+                   "folio JSMF/2023.01.08/7.212247. " \
+                   "Creado por Luis Capitanache el día " \
+                   "domingo, 08 de enero de 2023 a las 21:22:47.";
 }
 
 MainWindow::~MainWindow()
@@ -94,23 +94,25 @@ void MainWindow::showAllData()
     db.close();
 }
 
-void MainWindow::showCheckDigit(QString s)
+void MainWindow::showCheckDigit(QString nss)
 {
-    if (nssIsValid(s))
+    if (nssIsValid(nss))
     {
         QString message;
 
         message = "Cálculo de dígito verificador\n" \
                   "-----------------------------\n\n" \
-                  "NSS:\t" + s + "\n" \
-                  "Dígito:\t" + QString::number(getCheckDigit(s));
+                  "NSS:\t" + nss + "\n" \
+                  "Dígito:\t" + QString::number(getCheckDigit(nss));
 
         ui->edtOutput->setText(message);
         ui->lblInformation->setText("Listo");
     }
     else
     {
-        errBadNss(s);
+        ui->edtOutput->clear();
+        ui->edtOutput->setText(nss + ": No es un NSS válido");
+        ui->lblInformation->setText("Error");
     }
 }
 
@@ -200,83 +202,58 @@ int MainWindow::getCheckDigit(QString s)
     return checkDigit;
 }
 
-void MainWindow::errBadNss(QString s)
-{
-    ui->edtOutput->setText(s + " no es un NSS válido");
-    ui->lblInformation->setText("Error");
-}
-
-void MainWindow::errUnknownCommand(QString s)
-{
-    ui->edtOutput->setText(s + ": Comando no reconocido");
-    ui->lblInformation->setText("Error");
-}
-
-void MainWindow::errWrongNumberOfArguments(QString s)
-{
-    ui->edtOutput->setText(s + ": Número de argumentos equivocado");
-    ui->lblInformation->setText("Error");
-}
-
 void MainWindow::on_edtInput_returnPressed()
 {
-    QStringList commands;
+    QMap <QString, int> commands = {
+            {"a", 0},   {"about", 0},   {"acerca", 0},
+            {"l", 1},   {"ls", 1},      {"list", 1},    {"listar", 1},
+            {"d", 2},   {"digit", 2},   {"digito", 2},
+            {"c", 3},   {"cls", 3},     {"clear", 3},   {"limpiar", 3},
+            {"q", 4},   {"quit", 4},    {"exit", 4},    {"salir", 4},
+            {"f", 5},   {"folio", 5}
+        };
+
+    const int numArgs[] = {0, 0, 1, 0, 0, 0};
+
     QStringList input;
     QString cmd;
 
-    commands << "a" << "about" << "acerca";  //  0-2
-    commands << "l" << "list" << "listar";   //  3-5
-    commands << "d" << "digit" << "digito";  //  6-8
-    commands << "c" << "clear" << "limpiar"; //  9-11
-    commands << "q" << "exit" << "salir";    // 12-14
-    commands << "f" << "folio";              // 15-16
+    lastInput = ui->edtInput->text().simplified();
 
-    lastInput = ui->edtInput->text();
+    if (lastInput.length() == 0)
+    {
+        ui->edtInput->clear();
+        return;
+    }
+
     input = lastInput.split(" ");
     cmd = input.value(0);
 
     ui->edtInput->clear();
     ui->edtOutput->clear();
 
-    switch(commands.indexOf(cmd)){
-      case 0 ...2:
-        if (input.size() > 1)
-            errWrongNumberOfArguments(cmd);
-        else
-            showAboutInfo();
-        break;
-      case 3 ... 5:
-        if (input.size() > 1)
-            errWrongNumberOfArguments(cmd);
-        else
-            showAllData();
-        break;
-      case 6 ... 8:
-        if (input.size() != 2)
-            errWrongNumberOfArguments(cmd);
-        else
-            showCheckDigit(input.value(1));
-        break;
-      case 9 ... 11:
-        if (input.size() > 1)
-            errWrongNumberOfArguments(cmd);
-        else
-            clearOutput();
-        break;
-      case 12 ... 14:
-        if (input.size() > 1)
-            errWrongNumberOfArguments(cmd);
-         else
-             exitApp();
-        break;
-      case 15 ... 16:
-        if (input.size() > 1)
-          errWrongNumberOfArguments(cmd);
-        else
-           showFolio();
-        break;
-      default:
-        errUnknownCommand(cmd);
-        break;
+    if (commands.count(cmd) == 0) {
+        ui->edtOutput->clear();
+        ui->edtOutput->setText(cmd + ": Comando no reconocido");
+        ui->lblInformation->setText("Error");
+        return;
+    }
+
+    int expectedNumArgs = numArgs[commands[cmd]];
+
+    if (input.size() - 1 != expectedNumArgs) {
+        ui->edtOutput->clear();
+        ui->edtOutput->setText(cmd + ": Número de argumentos no válido");
+        ui->lblInformation->setText("Error");
+        return;
+    }
+
+    switch(commands[cmd]) {
+        case 0: showAboutInfo(); break;
+        case 1: showAllData(); break;
+        case 2: showCheckDigit(input.value(1)); break;
+        case 3: clearOutput(); break;
+        case 4: exitApp(); break;
+        case 5: showFolio(); break;
     }
 }

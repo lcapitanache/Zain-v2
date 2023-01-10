@@ -14,6 +14,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+
 public:
     QSqlDatabase db;
     QString lastInput; //TODO: Implementar último comando
@@ -22,11 +23,6 @@ public:
     ~MainWindow();
 
 private slots:
-
-    //Errores
-    void errBadNss(QString s);
-    void errUnknownCommand(QString s);
-    void errWrongNumberOfArguments(QString s);
 
     //Eventos
     void on_edtInput_returnPressed();
