@@ -14,7 +14,6 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-
 public:
     QSqlDatabase db;
     QString lastInput; //TODO: Implementar último comando

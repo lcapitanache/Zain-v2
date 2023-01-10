@@ -22,11 +22,6 @@ MainWindow::MainWindow(QWidget *parent)
     db.setDatabaseName("athena.db");
 
     showAllData();
-
-    QString data = "Oficio de incapacidades iniciales " \
-                   "folio JSMF/2023.01.08/7.212247. " \
-                   "Creado por Luis Capitanache el día " \
-                   "domingo, 08 de enero de 2023 a las 21:22:47.";
 }
 
 MainWindow::~MainWindow()
@@ -51,44 +46,62 @@ void MainWindow::clearOutput()
 void MainWindow::showAboutInfo()
 {
     QString about;
+    QString name;
+    QString year;
 
-    about = "Zaín v2\n" \
-            "Sistema de captura de incapacidades\n\n" \
+    year = QDateTime::currentDateTime().toString("yyyy");
+
+    name = "<html><b>Zaín v2</b></html>";
+
+    about = "Sistema de captura de incapacidades\n\n" \
             "Instituto Mexicano del Seguro Social\n" \
             "Unidad de Medicina Familiar N.° 36\n\n" \
-            "© 2023 Luis Capitanache\n" \
+            "© " + year + " Luis Capitanache\n" \
             "lcapitanache@gmail.com\n" \
             "https://lcapitanache.github.io/\n\n" \
-            "Qt 5.9.9 | MinGW 53 | x86 | 32-bits";
+            "Qt " + QT_VERSION_STR + " | MinGW 53 | x86 | 32-bits";
 
-    ui->edtOutput->setText(about);
+    ui->edtOutput->setText(name);
+    ui->edtOutput->append(about);
+
     ui->lblInformation->setText("Acerca de Zaín v2");
 }
 
 void MainWindow::showAllData()
 {
     QSqlQuery query;
-    QString data = "";
+    QString data;
+    QTextCursor cursor;
+
     int i = 0;
 
     db.open();
-    query.exec("SELECT * FROM incapacidades ORDER BY Tipo, NSS");
+
+    query.prepare("SELECT * FROM incapacidades ORDER BY Tipo, NSS");
+    query.exec();
+
+    ui->edtOutput->clear();
 
     while(query.next())
     {
         i++;
-        //data += QString::number(i) + "\t";
-        data += query.value(0).toString() + "   ";
-        data += query.value(1).toString() + "   ";
-        data += query.value(2).toString() + "   ";
-        data += query.value(3).toString() + "   ";
-        data += query.value(4).toString() + "\t";
-        data += query.value(7).toString() + "   ";
-        data += query.value(8).toString() + "\n";
+
+        data = query.value(0).toString() + "   " + \
+               query.value(1).toString() + "   " + \
+               query.value(2).toString() + "   " + \
+               query.value(3).toString() + "   " + \
+               query.value(4).toString() + "\t" + \
+               query.value(7).toString() + "   " + \
+               query.value(8).toString();
+
+        ui->edtOutput->append(data);
     }
 
-    ui->edtOutput->setText(data);
-    ui->lblInformation->setText(QString::number(i) + " registros encontrados");
+    cursor = ui->edtOutput->textCursor();
+    cursor.setPosition(0);
+    ui->edtOutput->setTextCursor(cursor);
+
+    ui->lblInformation->setText(QString::number(i) + " registros");
 
     query.clear();
     db.close();
@@ -100,8 +113,7 @@ void MainWindow::showCheckDigit(QString nss)
     {
         QString message;
 
-        message = "Cálculo de dígito verificador\n" \
-                  "-----------------------------\n\n" \
+        message = "Cálculo de dígito verificador\n\n" \
                   "NSS:\t" + nss + "\n" \
                   "Dígito:\t" + QString::number(getCheckDigit(nss));
 
@@ -123,9 +135,7 @@ void MainWindow::showFolio()
 
     folio = getFolio();
 
-    message = "Número de folio\n" \
-              "---------------\n\n";
-
+    message = "Número de folio\n\n";
     message += folio;
 
     ui->edtOutput->setText(message);
@@ -146,30 +156,32 @@ QString MainWindow::getFolio()
     local = QLocale(QLocale::Spanish, QLocale::Mexico);
     now = QDateTime::currentDateTime();
 
-    folio = "JSMF/";
-    folio += local.toString(now, "yyyy.MM.dd");
-    folio += "/" + QString::number(now.date().dayOfWeek());
-    folio += "." + local.toString(now, "hhmmss");
+    folio = "JSMF/" + local.toString(now, "yyyy.MM.dd") + "/"
+            + QString::number(now.date().dayOfWeek()) + "."
+            + local.toString(now, "hhmmss");
 
     return folio;
 }
 
-QImage MainWindow::getQrCode(QString s)
+QImage MainWindow::getQrCode(QString folio)
 {
-    QImage qrCode = QZXing::encodeData(s);
-    qrCode.save("QrCode.jpg");
+    QImage qrCode;
+    qrCode = QZXing::encodeData(folio);
+
+    folio.replace(QString("/"), QString("-"));
+    qrCode.save(folio + ".jpg");
 
     return qrCode;
 }
 
-bool MainWindow::nssIsValid(QString s)
+bool MainWindow::nssIsValid(QString nss)
 {
     QRegExp re("\\d*");
 
-    return (re.exactMatch(s) && (s.size() == 10));
+    return (re.exactMatch(nss) && (nss.size() == 10));
 }
 
-int MainWindow::getCheckDigit(QString s)
+int MainWindow::getCheckDigit(QString nss)
 {
     int i;
     int tmp = 0;
@@ -179,7 +191,7 @@ int MainWindow::getCheckDigit(QString s)
 
     for (i = 0; i<= 9; i++)
     {
-        tmp = s.at(i).digitValue();
+        tmp = nss.at(i).digitValue();
 
         if (i % 2 != 0)
         {
@@ -218,7 +230,7 @@ void MainWindow::on_edtInput_returnPressed()
     QStringList input;
     QString cmd;
 
-    lastInput = ui->edtInput->text().simplified();
+    lastInput = ui->edtInput->text().simplified().toLower();
 
     if (lastInput.length() == 0)
     {
@@ -236,6 +248,7 @@ void MainWindow::on_edtInput_returnPressed()
         ui->edtOutput->clear();
         ui->edtOutput->setText(cmd + ": Comando no reconocido");
         ui->lblInformation->setText("Error");
+
         return;
     }
 
@@ -245,6 +258,7 @@ void MainWindow::on_edtInput_returnPressed()
         ui->edtOutput->clear();
         ui->edtOutput->setText(cmd + ": Número de argumentos no válido");
         ui->lblInformation->setText("Error");
+
         return;
     }
 
