@@ -32,7 +32,7 @@ private slots:
     //Funciones
     int getCheckDigit(QString s);
     QString getFolio();
-    QImage getQrCode(QString s);
+    QString getQrCode(QString folio);
 
     //Métodos
     void clearOutput();

@@ -1,6 +1,6 @@
-<!DOCTYPE RCC>
-<RCC version="1.0">
-  <qresource>
-    <file>img/logo-96.png</file>
-  </qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>img/logo-96.png</file>
+        <file>img/folio.jpg</file>
+    </qresource>
 </RCC>

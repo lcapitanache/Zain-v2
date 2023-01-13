@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QStringList>
 #include <QDateTime>
+#include <QClipboard>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -14,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setWindowIcon(QIcon(":img/logo-96.png"));
     this->setStyleSheet("background-color: white;");
+
 
     ui->setupUi(this);
     ui->edtOutput->setReadOnly(true);
@@ -65,6 +67,8 @@ void MainWindow::showAboutInfo()
     ui->edtOutput->append(about);
 
     ui->lblInformation->setText("Acerca de Zaín v2");
+
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::showAllData()
@@ -86,13 +90,13 @@ void MainWindow::showAllData()
     {
         i++;
 
-        data = query.value(0).toString() + "   " + \
-               query.value(1).toString() + "   " + \
+        data = query.value(1).toString() + "   " + \
                query.value(2).toString() + "   " + \
                query.value(3).toString() + "   " + \
-               query.value(4).toString() + "\t" + \
-               query.value(7).toString() + "   " + \
-               query.value(8).toString();
+               query.value(4).toString() + "   " + \
+               query.value(5).toString() + "\t" + \
+               query.value(8).toString() + "   " + \
+               query.value(9).toString();
 
         ui->edtOutput->append(data);
     }
@@ -105,6 +109,8 @@ void MainWindow::showAllData()
 
     query.clear();
     db.close();
+
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::showCheckDigit(QString nss)
@@ -126,6 +132,8 @@ void MainWindow::showCheckDigit(QString nss)
         ui->edtOutput->setText(nss + ": No es un NSS válido");
         ui->lblInformation->setText("Error");
     }
+
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::showFolio()
@@ -133,22 +141,25 @@ void MainWindow::showFolio()
     QString folio;
     QString message;
 
+    ui->stackedWidget->setCurrentIndex(1);
+
     folio = getFolio();
 
-    message = "Número de folio\n\n";
-    message += folio;
+    message = folio;
 
-    ui->edtOutput->setText(message);
+    ui->lblFolio->setText(folio);
     ui->lblInformation->setText("Listo");
 
-    getQrCode(folio);
+    QPixmap QrCode(getQrCode(folio));
 
-    //QLabel label("<img src='..\\QrCode.jpg'/>");
-    //label.show();
+    ui->lblQrCode->setPixmap(QrCode);
+    ui->lblQrCode->setScaledContents(true);
+    ui->lblQrCode->show();
 }
 
 QString MainWindow::getFolio()
 {
+    QClipboard *clipboard = QGuiApplication::clipboard();
     QDateTime now;
     QLocale local;
     QString folio;
@@ -160,10 +171,12 @@ QString MainWindow::getFolio()
             + QString::number(now.date().dayOfWeek()) + "."
             + local.toString(now, "hhmmss");
 
+    clipboard->setText(folio);
+
     return folio;
 }
 
-QImage MainWindow::getQrCode(QString folio)
+QString MainWindow::getQrCode(QString folio)
 {
     QImage qrCode;
     qrCode = QZXing::encodeData(folio);
@@ -171,7 +184,7 @@ QImage MainWindow::getQrCode(QString folio)
     folio.replace(QString("/"), QString("-"));
     qrCode.save(folio + ".jpg");
 
-    return qrCode;
+    return folio + ".jpg";
 }
 
 bool MainWindow::nssIsValid(QString nss)
@@ -247,7 +260,8 @@ void MainWindow::on_edtInput_returnPressed()
     if (commands.count(cmd) == 0) {
         ui->edtOutput->clear();
         ui->edtOutput->setText(cmd + ": Comando no reconocido");
-        ui->lblInformation->setText("Error");
+        ui->lblInformation->setText("Error");       
+        ui->stackedWidget->setCurrentIndex(0);
 
         return;
     }
@@ -258,6 +272,7 @@ void MainWindow::on_edtInput_returnPressed()
         ui->edtOutput->clear();
         ui->edtOutput->setText(cmd + ": Número de argumentos no válido");
         ui->lblInformation->setText("Error");
+        ui->stackedWidget->setCurrentIndex(0);
 
         return;
     }
