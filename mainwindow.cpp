@@ -2,11 +2,16 @@
 #include "ui_mainwindow.h"
 #include "QZXing.h"
 
-#include <QMessageBox>
-#include <QDebug>
-#include <QStringList>
-#include <QDateTime>
 #include <QClipboard>
+#include <QDateTime>
+#include <QDebug>
+#include <QFile>
+#include <QMessageBox>
+#include <QSortFilterProxyModel>
+#include <QSqlQueryModel>
+#include <QStringList>
+#include <QTextCodec>
+#include <QTextStream>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -43,6 +48,8 @@ void MainWindow::clearOutput()
 {
     ui->edtOutput->clear();
     ui->lblInformation->clear();
+
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 void MainWindow::showAboutInfo()
@@ -73,44 +80,43 @@ void MainWindow::showAboutInfo()
 
 void MainWindow::showAllData()
 {
-    QSqlQuery query;
-    QString data;
-    QTextCursor cursor;
-
-    int i = 0;
+    QSqlQuery *query;
+    QSqlQueryModel *model;
+    QSortFilterProxyModel *proxy;
 
     db.open();
 
-    query.prepare("SELECT * FROM incapacidades ORDER BY Tipo, NSS");
-    query.exec();
+    query = new QSqlQuery("athena.db");
+    model = new QSqlQueryModel();
 
-    ui->edtOutput->clear();
+    query->prepare("SELECT * FROM incapacidades ORDER BY nss");
+    query->exec();
 
-    while(query.next())
+    model->setQuery(*query);
+
+    proxy = new QSortFilterProxyModel(model);
+    proxy->setSourceModel(model);
+
+    ui->tblDataOutput->setSortingEnabled(true);
+    ui->tblDataOutput->setModel(proxy);
+
+    for (int i = 0; i <= model->columnCount(); i++)
     {
-        i++;
-
-        data = query.value(1).toString() + "   " + \
-               query.value(2).toString() + "   " + \
-               query.value(3).toString() + "   " + \
-               query.value(4).toString() + "   " + \
-               query.value(5).toString() + "\t" + \
-               query.value(8).toString() + "   " + \
-               query.value(9).toString();
-
-        ui->edtOutput->append(data);
+        ui->tblDataOutput->resizeColumnToContents(i);
+        ui->tblDataOutput->setColumnWidth(i, ui->tblDataOutput->columnWidth(i) + 20);
     }
 
-    cursor = ui->edtOutput->textCursor();
-    cursor.setPosition(0);
-    ui->edtOutput->setTextCursor(cursor);
+    for (int i = 0; i <= model->rowCount(); i++)
+        ui->tblDataOutput->resizeRowToContents(i);
 
-    ui->lblInformation->setText(QString::number(i) + " registros");
+    ui->tblDataOutput->hideColumn(0); //TODO: Columna ID
 
-    query.clear();
+    ui->lblInformation->setText(QString::number(model->rowCount()) + " registros");
+
+    query->clear();
     db.close();
 
-    ui->stackedWidget->setCurrentIndex(0);
+    ui->stackedWidget->setCurrentIndex(2);
 }
 
 void MainWindow::showCheckDigit(QString nss)
@@ -144,7 +150,6 @@ void MainWindow::showFolio()
     ui->stackedWidget->setCurrentIndex(1);
 
     folio = getFolio();
-
     message = folio;
 
     ui->lblFolio->setText(folio);
@@ -155,6 +160,38 @@ void MainWindow::showFolio()
     ui->lblQrCode->setPixmap(QrCode);
     ui->lblQrCode->setScaledContents(true);
     ui->lblQrCode->show();
+}
+
+void MainWindow::showManual(QString cmd)
+{
+    QFile file(":help/" + cmd + ".md");
+    QString manual;
+    QString info;
+
+    if (!file.exists())
+    {
+        manual = "man: Sin entrada en el manual para <" + cmd + ">";
+        info = "Error";
+    }
+    else
+    {
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream stream(&file);
+            stream.setCodec(codec);
+
+            manual = stream.readAll();
+            info = "Manual del comando <" + cmd + ">";
+
+            file.close();
+        }
+    }
+
+    ui->stackedWidget->setCurrentIndex(0);
+    ui->lblInformation->setText(info);
+    ui->edtOutput->setPlainText(manual);
 }
 
 QString MainWindow::getFolio()
@@ -196,13 +233,12 @@ bool MainWindow::nssIsValid(QString nss)
 
 int MainWindow::getCheckDigit(QString nss)
 {
-    int i;
     int tmp = 0;
     int sumatory = 0;
     int topTen = 0;
     int checkDigit = 0;
 
-    for (i = 0; i<= 9; i++)
+    for (int i = 0; i<= 9; i++)
     {
         tmp = nss.at(i).digitValue();
 
@@ -232,13 +268,14 @@ void MainWindow::on_edtInput_returnPressed()
     QMap <QString, int> commands = {
             {"a", 0},   {"about", 0},   {"acerca", 0},
             {"l", 1},   {"ls", 1},      {"list", 1},    {"listar", 1},
-            {"d", 2},   {"digit", 2},   {"digito", 2},
+            {"d", 2},   {"digit", 2},   {"dígito", 2},
             {"c", 3},   {"cls", 3},     {"clear", 3},   {"limpiar", 3},
             {"q", 4},   {"quit", 4},    {"exit", 4},    {"salir", 4},
-            {"f", 5},   {"folio", 5}
+            {"f", 5},   {"folio", 5},
+            {"man", 6}, {"help", 6}
         };
 
-    const int numArgs[] = {0, 0, 1, 0, 0, 0};
+    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1};
 
     QStringList input;
     QString cmd;
@@ -284,5 +321,6 @@ void MainWindow::on_edtInput_returnPressed()
         case 3: clearOutput(); break;
         case 4: exitApp(); break;
         case 5: showFolio(); break;
+        case 6: showManual(input.value(1)); break;
     }
 }

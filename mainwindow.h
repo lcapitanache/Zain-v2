@@ -43,6 +43,7 @@ private slots:
     void showAllData();
     void showCheckDigit(QString s);
     void showFolio();
+    void showManual(QString cmd);
 
 private:
     Ui::MainWindow *ui;

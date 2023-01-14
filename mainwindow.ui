@@ -10,6 +10,12 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>1000</width>
+    <height>600</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Zaín v2</string>
   </property>
@@ -33,10 +39,14 @@ background-color: white;
         <property name="font">
          <font>
           <family>Consolas</family>
-          <pointsize>14</pointsize>
+          <pointsize>12</pointsize>
           <weight>75</weight>
+          <italic>false</italic>
           <bold>true</bold>
+          <underline>false</underline>
+          <strikeout>false</strikeout>
           <stylestrategy>PreferAntialias</stylestrategy>
+          <kerning>true</kerning>
          </font>
         </property>
         <property name="styleSheet">
@@ -46,7 +56,7 @@ background-color: white;
 }</string>
         </property>
         <property name="text">
-         <string>&gt;</string>
+         <string>CMD&gt;</string>
         </property>
        </widget>
       </item>
@@ -78,7 +88,7 @@ color: black;
     <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="pagOutput">
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -129,7 +139,7 @@ border: 0px;
           <property name="orientation">
            <enum>Qt::Vertical</enum>
           </property>
-          <widget class="QWidget" name="">
+          <widget class="QWidget" name="layoutWidget">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <property name="bottomMargin">
              <number>10</number>
@@ -181,7 +191,7 @@ border: 0px;
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="">
+          <widget class="QWidget" name="layoutWidget">
            <layout class="QHBoxLayout" name="horizontalLayout">
             <property name="bottomMargin">
              <number>70</number>
@@ -244,6 +254,45 @@ border: 0px;
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="pagDataOutput">
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <widget class="QTableView" name="tblDataOutput">
+          <property name="font">
+           <font>
+            <family>Consolas</family>
+            <stylestrategy>PreferAntialias</stylestrategy>
+           </font>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">#tblDataOutput
+{
+border: 0px;
+gridline-color: white;
+}</string>
+          </property>
+          <property name="verticalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::AdjustIgnored</enum>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>
@@ -261,10 +310,10 @@ border: 0px;
         </property>
         <property name="styleSheet">
          <string notr="true">#lblAyuda {
-color: black;
+color: white;
 qproperty-alignment: AlignCenter;
-background: white;
-border: 1px solid gray;
+background: #9F2B68;
+border: 1px solid #9F2B68	;
 border-radius: 3px;
 padding: 5px;
 }</string>
