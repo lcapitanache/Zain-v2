@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "alignedSqlQueryModel.h"
+
 #include <QMainWindow>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -15,11 +17,14 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    QSqlDatabase db;
+    QSqlDatabase db;    
     QString lastInput; //TODO: Implementar último comando
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+protected:
+    void keyPressEvent(QKeyEvent *e);
 
 private slots:
 
@@ -46,6 +51,7 @@ private slots:
     void showManual(QString cmd);
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow *ui;    
+    AlignedSqlQueryModel *queryModel;
 };
 #endif // MAINWINDOW_H

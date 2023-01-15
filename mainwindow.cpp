@@ -1,11 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "QZXing.h"
+#include "alignedSqlQueryModel.h"
 
 #include <QClipboard>
 #include <QDateTime>
 #include <QDebug>
 #include <QFile>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
 #include <QSqlQueryModel>
@@ -34,6 +36,18 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_F1)
+    {
+        qDebug() << "F1 - Ayuda"; //TODO: Implementar ayuda html
+    }
+    else
+    {
+        QWidget::keyPressEvent(event);
+    }
 }
 
 void MainWindow::exitApp()
@@ -81,37 +95,38 @@ void MainWindow::showAboutInfo()
 void MainWindow::showAllData()
 {
     QSqlQuery *query;
-    QSqlQueryModel *model;
+    //QSqlQueryModel *model;
     QSortFilterProxyModel *proxy;
 
     db.open();
 
     query = new QSqlQuery("athena.db");
-    model = new QSqlQueryModel();
+    //model = new QSqlQueryModel(this);
+    queryModel = new AlignedSqlQueryModel(this);
 
     query->prepare("SELECT * FROM incapacidades ORDER BY nss");
     query->exec();
 
-    model->setQuery(*query);
+    queryModel->setQuery(*query);
 
-    proxy = new QSortFilterProxyModel(model);
-    proxy->setSourceModel(model);
+    proxy = new QSortFilterProxyModel(queryModel);
+    proxy->setSourceModel(queryModel);
 
     ui->tblDataOutput->setSortingEnabled(true);
     ui->tblDataOutput->setModel(proxy);
 
-    for (int i = 0; i <= model->columnCount(); i++)
+    for (int i = 0; i <= queryModel->columnCount(); i++)
     {
         ui->tblDataOutput->resizeColumnToContents(i);
         ui->tblDataOutput->setColumnWidth(i, ui->tblDataOutput->columnWidth(i) + 20);
     }
 
-    for (int i = 0; i <= model->rowCount(); i++)
+    for (int i = 0; i <= queryModel->rowCount(); i++)
         ui->tblDataOutput->resizeRowToContents(i);
 
-    ui->tblDataOutput->hideColumn(0); //TODO: Columna ID
+    ui->tblDataOutput->hideColumn(0); //TODO: Columna ID   
 
-    ui->lblInformation->setText(QString::number(model->rowCount()) + " registros");
+    ui->lblInformation->setText(QString::number(queryModel->rowCount()) + " registros");
 
     query->clear();
     db.close();
@@ -159,7 +174,7 @@ void MainWindow::showFolio()
 
     ui->lblQrCode->setPixmap(QrCode);
     ui->lblQrCode->setScaledContents(true);
-    ui->lblQrCode->show();
+    //ui->lblQrCode->show();
 }
 
 void MainWindow::showManual(QString cmd)
@@ -272,10 +287,10 @@ void MainWindow::on_edtInput_returnPressed()
             {"c", 3},   {"cls", 3},     {"clear", 3},   {"limpiar", 3},
             {"q", 4},   {"quit", 4},    {"exit", 4},    {"salir", 4},
             {"f", 5},   {"folio", 5},
-            {"man", 6}, {"help", 6}
+            {"man", 6}, {"help", 6},            
         };
 
-    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1};
+    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1, 0};
 
     QStringList input;
     QString cmd;
@@ -321,6 +336,6 @@ void MainWindow::on_edtInput_returnPressed()
         case 3: clearOutput(); break;
         case 4: exitApp(); break;
         case 5: showFolio(); break;
-        case 6: showManual(input.value(1)); break;
+        case 6: showManual(input.value(1)); break;        
     }
 }
