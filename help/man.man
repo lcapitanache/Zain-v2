@@ -1,0 +1,17 @@
+<html>
+	<p><b>NOMBRE</b></p>
+	<p>&nbsp;&nbsp;&nbsp;man - Manual</p>
+	<br>
+	<p><b>SINOPSIS</b></p>
+	<p>&nbsp;&nbsp;&nbsp;man [comando]</p>
+	<br>
+	<p><b>DESCRIPCIÓN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Muestra la ayuda en línea del comando pasado como argumento</p>
+	<br>
+	<p><b>OPCIONES</b></p>
+	<p>&nbsp;&nbsp;&nbsp;comando</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cls, dof, fol, itt, uname, quit</p>
+	<br>
+	<p><b>VÉASE TAMBIÉN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Sin comandos directamente relacionados</p>
+</html>

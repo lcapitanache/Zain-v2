@@ -2,12 +2,12 @@
     <qresource prefix="/">
         <file>img/logo-96.png</file>
         <file>img/folio.jpg</file>
-        <file>help/a.md</file>
-        <file>help/f.md</file>
-        <file>help/l.md</file>
-        <file>help/c.md</file>
-        <file>help/q.md</file>
-        <file>help/man.md</file>
-        <file>help/d.md</file>
+        <file>help/cls.man</file>
+        <file>help/dof.man</file>
+        <file>help/fol.man</file>
+        <file>help/itt.man</file>
+        <file>help/man.man</file>
+        <file>help/quit.man</file>
+        <file>help/uname.man</file>
     </qresource>
 </RCC>

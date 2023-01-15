@@ -191,7 +191,7 @@ border: 0px;
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="layoutWidget">
+          <widget class="QWidget" name="layoutWidget1">
            <layout class="QHBoxLayout" name="horizontalLayout">
             <property name="bottomMargin">
              <number>70</number>

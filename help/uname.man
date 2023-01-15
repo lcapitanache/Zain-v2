@@ -1,0 +1,16 @@
+<html>
+	<p><b>NOMBRE</b></p>
+	<p>&nbsp;&nbsp;&nbsp;uname - <em>Your name</em> o tu nombre</p>
+	<br>
+	<p><b>SINOPSIS</b></p>
+	<p>&nbsp;&nbsp;&nbsp;uname</p>
+	<br>
+	<p><b>DESCRIPCIÓN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Muestra información general sobre la aplicación en pantalla</p>
+	<br>
+	<p><b>OPCIONES</b></p>	
+	<p>&nbsp;&nbsp;&nbsp;Este comando no admite opciones</p>
+	<br>
+	<p><b>VÉASE TAMBIÉN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Sin comandos directamente relacionados</p>
+</html>

@@ -1,0 +1,18 @@
+<html>
+	<p><b>NOMBRE</b></p>
+	<p>&nbsp;&nbsp;&nbsp;dof - <em>Digit of</em> o dígito de</p>
+	<br>
+	<p><b>SINOPSIS</b></p>
+	<p>&nbsp;&nbsp;&nbsp;dof [nss]</p>
+	<br>
+	<p><b>DESCRIPCIÓN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Calcula el dígito verificador del número de seguriad social pasado como argumento y lo muestra</p>
+	<br>
+	<p><b>OPCIONES</b></p>
+	<p>&nbsp;&nbsp;&nbsp;nss</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;número de seguridad social, a diez dígitos, consecutivos y sin caracteres intermedios</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ej. 4972553709</p>
+	<br>
+	<p><b>VÉASE TAMBIÉN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Sin comandos directamente relacionados</p>
+</html>

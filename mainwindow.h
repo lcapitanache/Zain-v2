@@ -36,7 +36,7 @@ private slots:
     bool numOfArgsIsOK(QString cmd, int expectedNumArgs, int numArgsPassed);
     bool nssIsOK(QString s);
 
-    //Funciones
+    //Funciones    
     void checkCommand();
     void executeCommand(int cmd, QString argument);
     int getCheckDigit(QString s);

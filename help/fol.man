@@ -1,0 +1,16 @@
+<html>
+	<p><b>NOMBRE</b></p>
+	<p>&nbsp;&nbsp;&nbsp;fol - Folio</p>
+	<br>
+	<p><b>SINOPSIS</b></p>
+	<p>&nbsp;&nbsp;&nbsp;fol</p>
+	<br>
+	<p><b>DESCRIPCIÓN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Genera un número de folio y lo muestra en pantalla junto con un código Qr, el cual puede escanearse con la cámara de un teléfono inteligente</p>
+	<br>
+	<p><b>OPCIONES</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Este comando no admite opciones</p>
+	<br>
+	<p><b>VÉASE TAMBIÉN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Sin comandos directamente relacionados</p>
+</html>

@@ -1,0 +1,77 @@
+<html>
+	<p><b>NOMBRE</b></p>
+	<p>&nbsp;&nbsp;&nbsp;itt - Incapacidades temporales para el trabajo</p>
+	<br>
+	<p><b>SINOPSIS</b></p>
+	<p>&nbsp;&nbsp;&nbsp;itt</p>
+	<br>
+	<p><b>DESCRIPCIÓN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Enlista todas las incapacidades temporales registradas</p>
+	<br>
+	<p>&nbsp;&nbsp;&nbsp;Columnas mostradas:</p>
+	<br>
+	<ul>	
+		<li>
+			<p>NSS - número de seguridad social</p>
+		</li>
+		<li>
+			<p>Tipo - tipo de incapacidad</p>
+		</li>
+		<li>
+			<p>Folio - folio de incapacidad</p>
+		</li>
+		<li>
+			<p>Expedición - fecha de expedición</p>
+		</li>
+		<li>
+			<p>Días - total de días que ampara</p>
+		</li>
+		<li>
+			<p>Asegurado - nombre completo del asegurado</p>
+		</li>
+		<li>
+			<p>Anexo - anexo(s) de la incapacidad</p>
+		</li>
+		<li>
+			<p>Marca_temporal - fecha y hora de captura</p>
+		</li>
+		<li>
+			<p>AUO - personal que capturó</p>
+		</li>
+	</ul>
+	<br>
+	<p>&nbsp;&nbsp;&nbsp;El tipo de incapacidad puede ser uno de los listados a continuación:</p>
+	<br>
+	<ul>		
+		<li>
+			<p>INI - inicial y electrónica, de enfermedad general o de maternidad</p>
+		</li>
+		<li>
+			<p>SUB - subsecuente y electrónica, cualquier ramo</p>
+		</li>
+		<li>
+			<p>MAN - manual, todas menos inicial de riesgo de trabajo</p>
+		</li>
+		<li>
+			<p>IMS - de trabajador IMSS, inicial, subsecuente o manual</p>
+		</li>
+		<li>
+			<p>CAN - Cancelada, electrónica o manual</p>
+		</li>
+		<li>
+			<p>CON - de Consejo Técnico, electrónica o manual, de cualquier ramo</p>
+		</li>
+		<li>
+			<p>SST - inicial de riesgo de trabajo sin ST-7, electrónica o manual</p>
+		</li>
+		<li>
+			<p>COB - inicial de riesgo de trabajo con ST-7, electrónica o manual</p>
+		</li>		
+	</ul>
+	<br>
+	<p>OPCIONES</p>
+	<p>&nbsp;&nbsp;&nbsp;Este comando no admite opciones</p>
+	<br>
+	<p><b>VÉASE TAMBIÉN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;ins (insertar), edit (editar), rm (remover), print (imprimir), rep (reportar)</p>
+</html>

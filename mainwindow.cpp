@@ -166,7 +166,7 @@ void MainWindow::showFolio()
 
 void MainWindow::showManual(QString cmd)
 {
-    QFile file(":help/" + cmd + ".md");
+    QFile file(":help/" + cmd + ".man");
     QString manual;
     QString info;
 
@@ -190,7 +190,8 @@ void MainWindow::showManual(QString cmd)
         }
     }    
 
-    ui->edtOutput->setPlainText(manual);
+    //ui->edtOutput->setPlainText(manual);
+    ui->edtOutput->setHtml(manual);
     ui->lblInformation->setText(info);
     ui->stackedWidget->setCurrentIndex(0);
 }
@@ -272,16 +273,13 @@ void MainWindow::on_edtInput_returnPressed()
 void MainWindow::checkCommand()
 {
     QMap <QString, int> commands = {
-            {"a", 0},   {"about", 0},   {"acerca", 0},
-            {"l", 1},   {"ls", 1},      {"list", 1},    {"listar", 1},
-            {"d", 2},   {"digit", 2},   {"dígito", 2},
-            {"c", 3},   {"cls", 3},     {"clear", 3},   {"limpiar", 3},
-            {"q", 4},   {"quit", 4},    {"exit", 4},    {"salir", 4},
-            {"f", 5},   {"folio", 5},
-            {"man", 6}, {"help", 6},
+            {"uname", 0},      {"itt", 1},
+            {"dof", 2},        {"cls", 3},
+            {"quit", 4},       {"fol", 5},
+            {"man", 6},
         };
 
-    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1, 0};
+    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1};
 
     QStringList input = lastInput.split(" ");
     QString cmd = input.value(0);
@@ -331,7 +329,7 @@ bool MainWindow::numOfArgsIsOK(QString cmd, int expectedNumArgs, int numArgsPass
 void MainWindow::executeCommand(int cmd, QString argument)
 {
     switch(cmd)
-    {
+    {        
         case 0: showAboutInfo(); break;
         case 1: showAllData(); break;
         case 2: showCheckDigit(argument); break;
