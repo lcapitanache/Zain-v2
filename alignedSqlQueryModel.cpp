@@ -11,10 +11,9 @@ QVariant AlignedSqlQueryModel::data(const QModelIndex &index, int role) const
         switch(index.column())
         {
             case 1 ... 5:
-            case 8:
+            case 7 ... 8:
                 return Qt::AlignCenter;
             case 6:
-            case 7:
             case 9:
                 return Qt::AlignLeft;
         }

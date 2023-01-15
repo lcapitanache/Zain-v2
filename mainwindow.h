@@ -42,6 +42,7 @@ private slots:
     //Métodos
     void clearOutput();
     void exitApp();
+    void resizeColumnsAndRows();
 
     //Métodos de mensaje
     void showAboutInfo();
@@ -52,6 +53,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;    
-    AlignedSqlQueryModel *queryModel;
+    AlignedSqlQueryModel *model;
 };
 #endif // MAINWINDOW_H

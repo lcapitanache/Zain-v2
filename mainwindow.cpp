@@ -10,7 +10,6 @@
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QSortFilterProxyModel>
-#include <QSqlQueryModel>
 #include <QStringList>
 #include <QTextCodec>
 #include <QTextStream>
@@ -22,7 +21,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setWindowIcon(QIcon(":img/logo-96.png"));
     this->setStyleSheet("background-color: white;");
-
 
     ui->setupUi(this);
     ui->edtOutput->setReadOnly(true);
@@ -42,7 +40,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_F1)
     {
-        qDebug() << "F1 - Ayuda"; //TODO: Implementar ayuda html
+        qDebug() << "F1 - Ayuda";
     }
     else
     {
@@ -67,22 +65,17 @@ void MainWindow::clearOutput()
 }
 
 void MainWindow::showAboutInfo()
-{
-    QString about;
-    QString name;
-    QString year;
+{    
+    QString name = "<html><b>Zaín v2</b></html>";
+    QString year = QDateTime::currentDateTime().toString("yyyy");
 
-    year = QDateTime::currentDateTime().toString("yyyy");
-
-    name = "<html><b>Zaín v2</b></html>";
-
-    about = "Sistema de captura de incapacidades\n\n" \
-            "Instituto Mexicano del Seguro Social\n" \
-            "Unidad de Medicina Familiar N.° 36\n\n" \
-            "© " + year + " Luis Capitanache\n" \
-            "lcapitanache@gmail.com\n" \
-            "https://lcapitanache.github.io/\n\n" \
-            "Qt " + QT_VERSION_STR + " | MinGW 53 | x86 | 32-bits";
+    QString about = "Sistema de captura de incapacidades\n\n" \
+                    "Instituto Mexicano del Seguro Social\n" \
+                    "Unidad de Medicina Familiar N.° 36\n\n" \
+                    "© " + year + " Luis Capitanache\n" \
+                    "lcapitanache@gmail.com\n" \
+                    "https://lcapitanache.github.io/\n\n" \
+                    "Qt " + QT_VERSION_STR + " | MinGW 53 | x86 | 32-bits";
 
     ui->edtOutput->setText(name);
     ui->edtOutput->append(about);
@@ -92,57 +85,57 @@ void MainWindow::showAboutInfo()
     ui->stackedWidget->setCurrentIndex(0);
 }
 
-void MainWindow::showAllData()
+void MainWindow::resizeColumnsAndRows()
 {
-    QSqlQuery *query;
-    //QSqlQueryModel *model;
-    QSortFilterProxyModel *proxy;
-
-    db.open();
-
-    query = new QSqlQuery("athena.db");
-    //model = new QSqlQueryModel(this);
-    queryModel = new AlignedSqlQueryModel(this);
-
-    query->prepare("SELECT * FROM incapacidades ORDER BY nss");
-    query->exec();
-
-    queryModel->setQuery(*query);
-
-    proxy = new QSortFilterProxyModel(queryModel);
-    proxy->setSourceModel(queryModel);
-
-    ui->tblDataOutput->setSortingEnabled(true);
-    ui->tblDataOutput->setModel(proxy);
-
-    for (int i = 0; i <= queryModel->columnCount(); i++)
+    for (int i = 0; i <= model->columnCount(); i++)
     {
         ui->tblDataOutput->resizeColumnToContents(i);
         ui->tblDataOutput->setColumnWidth(i, ui->tblDataOutput->columnWidth(i) + 20);
     }
 
-    for (int i = 0; i <= queryModel->rowCount(); i++)
+    for (int i = 0; i <= model->rowCount(); i++)
         ui->tblDataOutput->resizeRowToContents(i);
+}
 
-    ui->tblDataOutput->hideColumn(0); //TODO: Columna ID   
+void MainWindow::showAllData()
+{
+    db.open();
 
-    ui->lblInformation->setText(QString::number(queryModel->rowCount()) + " registros");
+    QSqlQuery *query = new QSqlQuery(db.databaseName());
+    query->prepare("SELECT * FROM incapacidades ORDER BY nss");
+    query->exec();
+
+    model = new AlignedSqlQueryModel(this);
+    model->setQuery(*query);
 
     query->clear();
     db.close();
 
+    QSortFilterProxyModel *proxy = new QSortFilterProxyModel(model);
+    proxy->setSourceModel(model);
+
+    ui->tblDataOutput->setSortingEnabled(true);
+    ui->tblDataOutput->setModel(proxy);
+    ui->tblDataOutput->hideColumn(0);
+
+    resizeColumnsAndRows();
+
+    ui->lblInformation->setText(QString::number(model->rowCount()) + " registros");
     ui->stackedWidget->setCurrentIndex(2);
 }
 
 void MainWindow::showCheckDigit(QString nss)
 {
     if (nssIsValid(nss))
-    {
-        QString message;
+    {        
+        QString digit = QString::number(getCheckDigit(nss));
 
-        message = "Cálculo de dígito verificador\n\n" \
-                  "NSS:\t" + nss + "\n" \
-                  "Dígito:\t" + QString::number(getCheckDigit(nss));
+        nss.insert(4, "-");
+        nss.insert(7, "-");
+
+        QString message = "Cálculo de dígito verificador\n\n" \
+                          "NSS:\t" + nss + "\n" \
+                          "Dígito:\t" + digit;
 
         ui->edtOutput->setText(message);
         ui->lblInformation->setText("Listo");
@@ -159,22 +152,16 @@ void MainWindow::showCheckDigit(QString nss)
 
 void MainWindow::showFolio()
 {
-    QString folio;
-    QString message;
-
-    ui->stackedWidget->setCurrentIndex(1);
-
-    folio = getFolio();
-    message = folio;
-
-    ui->lblFolio->setText(folio);
-    ui->lblInformation->setText("Listo");
+    QString folio = getFolio();
 
     QPixmap QrCode(getQrCode(folio));
-
     ui->lblQrCode->setPixmap(QrCode);
     ui->lblQrCode->setScaledContents(true);
-    //ui->lblQrCode->show();
+
+    ui->lblFolio->setText(folio);
+
+    ui->lblInformation->setText("Listo");
+    ui->stackedWidget->setCurrentIndex(1);
 }
 
 void MainWindow::showManual(QString cmd)
@@ -196,33 +183,28 @@ void MainWindow::showManual(QString cmd)
         {
             QTextStream stream(&file);
             stream.setCodec(codec);
-
             manual = stream.readAll();
-            info = "Manual del comando <" + cmd + ">";
-
             file.close();
-        }
-    }
 
-    ui->stackedWidget->setCurrentIndex(0);
-    ui->lblInformation->setText(info);
+            info = "Manual del comando <" + cmd + ">";
+        }
+    }    
+
     ui->edtOutput->setPlainText(manual);
+    ui->lblInformation->setText(info);
+    ui->stackedWidget->setCurrentIndex(0);
 }
 
 QString MainWindow::getFolio()
-{
+{    
+    QDateTime now = QDateTime::currentDateTime();
+    QLocale local = QLocale(QLocale::Spanish, QLocale::Mexico);
+
+    QString folio = "JSMF/" + local.toString(now, "yyyy.MM.dd") + "/"
+                    + QString::number(now.date().dayOfWeek()) + "."
+                    + local.toString(now, "hhmmss");
+
     QClipboard *clipboard = QGuiApplication::clipboard();
-    QDateTime now;
-    QLocale local;
-    QString folio;
-
-    local = QLocale(QLocale::Spanish, QLocale::Mexico);
-    now = QDateTime::currentDateTime();
-
-    folio = "JSMF/" + local.toString(now, "yyyy.MM.dd") + "/"
-            + QString::number(now.date().dayOfWeek()) + "."
-            + local.toString(now, "hhmmss");
-
     clipboard->setText(folio);
 
     return folio;
@@ -230,8 +212,7 @@ QString MainWindow::getFolio()
 
 QString MainWindow::getQrCode(QString folio)
 {
-    QImage qrCode;
-    qrCode = QZXing::encodeData(folio);
+    QImage qrCode = QZXing::encodeData(folio);
 
     folio.replace(QString("/"), QString("-"));
     qrCode.save(folio + ".jpg");
@@ -292,9 +273,6 @@ void MainWindow::on_edtInput_returnPressed()
 
     const int numArgs[] = {0, 0, 1, 0, 0, 0, 1, 0};
 
-    QStringList input;
-    QString cmd;
-
     lastInput = ui->edtInput->text().simplified().toLower();
 
     if (lastInput.length() == 0)
@@ -303,8 +281,8 @@ void MainWindow::on_edtInput_returnPressed()
         return;
     }
 
-    input = lastInput.split(" ");
-    cmd = input.value(0);
+    QStringList input = lastInput.split(" ");
+    QString cmd = input.value(0);
 
     ui->edtInput->clear();
     ui->edtOutput->clear();
