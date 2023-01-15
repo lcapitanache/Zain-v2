@@ -126,7 +126,7 @@ void MainWindow::showAllData()
 
 void MainWindow::showCheckDigit(QString nss)
 {
-    if (nssIsValid(nss))
+    if (nssIsOK(nss))
     {        
         QString digit = QString::number(getCheckDigit(nss));
 
@@ -196,7 +196,7 @@ void MainWindow::showManual(QString cmd)
 }
 
 QString MainWindow::getFolio()
-{    
+{
     QDateTime now = QDateTime::currentDateTime();
     QLocale local = QLocale(QLocale::Spanish, QLocale::Mexico);
 
@@ -220,7 +220,7 @@ QString MainWindow::getQrCode(QString folio)
     return folio + ".jpg";
 }
 
-bool MainWindow::nssIsValid(QString nss)
+bool MainWindow::nssIsOK(QString nss)
 {
     QRegExp re("\\d*");
 
@@ -261,6 +261,16 @@ int MainWindow::getCheckDigit(QString nss)
 
 void MainWindow::on_edtInput_returnPressed()
 {
+    lastInput = ui->edtInput->text().simplified().toLower();
+    ui->edtInput->clear();
+
+    if (lastInput.length() == 0) { return; }
+
+    checkCommand();
+}
+
+void MainWindow::checkCommand()
+{
     QMap <QString, int> commands = {
             {"a", 0},   {"about", 0},   {"acerca", 0},
             {"l", 1},   {"ls", 1},      {"list", 1},    {"listar", 1},
@@ -268,52 +278,66 @@ void MainWindow::on_edtInput_returnPressed()
             {"c", 3},   {"cls", 3},     {"clear", 3},   {"limpiar", 3},
             {"q", 4},   {"quit", 4},    {"exit", 4},    {"salir", 4},
             {"f", 5},   {"folio", 5},
-            {"man", 6}, {"help", 6},            
+            {"man", 6}, {"help", 6},
         };
 
     const int numArgs[] = {0, 0, 1, 0, 0, 0, 1, 0};
 
-    lastInput = ui->edtInput->text().simplified().toLower();
-
-    if (lastInput.length() == 0)
-    {
-        ui->edtInput->clear();
-        return;
-    }
-
     QStringList input = lastInput.split(" ");
     QString cmd = input.value(0);
 
-    ui->edtInput->clear();
-    ui->edtOutput->clear();
+    if (!commandIsOK(commands, cmd))
+        return;
 
-    if (commands.count(cmd) == 0) {
+    int argumentsRequired = numArgs[commands[cmd]];
+    int argumentsPassed = input.size() - 1;
+
+    if (!numOfArgsIsOK(cmd, argumentsRequired, argumentsPassed))
+        return;
+
+    QString argument = input.value(1);
+    executeCommand(commands[cmd], argument);
+}
+
+bool MainWindow::commandIsOK(QMap <QString, int> commands, QString cmd)
+{
+    if (commands.count(cmd) == 0)
+    {
         ui->edtOutput->clear();
         ui->edtOutput->setText(cmd + ": Comando no reconocido");
-        ui->lblInformation->setText("Error");       
+        ui->lblInformation->setText("Error");
         ui->stackedWidget->setCurrentIndex(0);
 
-        return;
+        return false;
     }
 
-    int expectedNumArgs = numArgs[commands[cmd]];
+    return true;
+}
 
-    if (input.size() - 1 != expectedNumArgs) {
+bool MainWindow::numOfArgsIsOK(QString cmd, int expectedNumArgs, int numArgsPassed)
+{
+    if (numArgsPassed != expectedNumArgs)
+    {
         ui->edtOutput->clear();
         ui->edtOutput->setText(cmd + ": Número de argumentos no válido");
         ui->lblInformation->setText("Error");
         ui->stackedWidget->setCurrentIndex(0);
 
-        return;
+        return false;
     }
+    return true;
+}
 
-    switch(commands[cmd]) {
+void MainWindow::executeCommand(int cmd, QString argument)
+{
+    switch(cmd)
+    {
         case 0: showAboutInfo(); break;
         case 1: showAllData(); break;
-        case 2: showCheckDigit(input.value(1)); break;
+        case 2: showCheckDigit(argument); break;
         case 3: clearOutput(); break;
         case 4: exitApp(); break;
         case 5: showFolio(); break;
-        case 6: showManual(input.value(1)); break;        
+        case 6: showManual(argument); break;
     }
 }

@@ -18,7 +18,7 @@ class MainWindow : public QMainWindow
 
 public:
     QSqlDatabase db;    
-    QString lastInput; //TODO: Implementar último comando
+    QString lastInput;
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -31,13 +31,17 @@ private slots:
     //Eventos
     void on_edtInput_returnPressed();
 
-    //Flags
-    bool nssIsValid(QString s);
+    //Flags    
+    bool commandIsOK(QMap <QString, int> commands, QString cmd);
+    bool numOfArgsIsOK(QString cmd, int expectedNumArgs, int numArgsPassed);
+    bool nssIsOK(QString s);
 
     //Funciones
+    void checkCommand();
+    void executeCommand(int cmd, QString argument);
     int getCheckDigit(QString s);
     QString getFolio();
-    QString getQrCode(QString folio);
+    QString getQrCode(QString folio);    
 
     //Métodos
     void clearOutput();
