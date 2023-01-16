@@ -26,10 +26,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     setWindowIcon(QIcon(":img/logo-96.png"));
-    this->setStyleSheet("background-color: white;");    
+    this->setStyleSheet("background-color: white;");
 
     ui->setupUi(this);
-    ui->edtOutput->setReadOnly(true);    
+    ui->edtOutput->setReadOnly(true);
 
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("athena.db");
@@ -53,34 +53,37 @@ MainWindow::~MainWindow()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Up)
+    if (ui->edtInput->hasFocus())
     {
-        if (currentLineInHistory == 1) { return; }
+        if (event->key() == Qt::Key_Up)
+        {
+            if (currentLineInHistory == 1) { return; }
 
-        if (currentLineInHistory > 0)
-        {
-            currentLineInHistory--;
-            readFromHistory();
+            if (currentLineInHistory > 0)
+            {
+                currentLineInHistory--;
+                readFromHistory();
+            }
         }
-    }
-    else if (event->key() == Qt::Key_Down)
-    {
-        if (currentLineInHistory == getHistoryTotalLines() - 1)
+        else if (event->key() == Qt::Key_Down)
         {
-            currentLineInHistory++;
-            ui->edtInput->clear();
-            return;
-        }
+            if (currentLineInHistory == getHistoryTotalLines() - 1)
+            {
+                currentLineInHistory++;
+                ui->edtInput->clear();
+                return;
+            }
 
-        if (currentLineInHistory < getHistoryTotalLines() - 1)
-        {
-            currentLineInHistory++;
-            readFromHistory();
+            if (currentLineInHistory < getHistoryTotalLines() - 1)
+            {
+                currentLineInHistory++;
+                readFromHistory();
+            }
         }
-    }
-    else
-    {
-        QWidget::keyPressEvent(event);
+        else
+        {
+            QWidget::keyPressEvent(event);
+        }
     }
 }
 
@@ -90,8 +93,9 @@ void MainWindow::addToHistory(QString line)
 
     if (file.open(QIODevice::WriteOnly | QIODevice::Append))
     {
-        QTextStream stream(&file);
-        stream << endl << line;
+        QTextStream in(&file);
+        in << endl << line;
+        file.close();
     }
 }
 
@@ -123,12 +127,13 @@ void MainWindow::readFromHistory()
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QTextStream stream(&file);
-        QString allText = stream.readAll();
+        QTextStream in(&file);
+        QString allText = in.readAll();
         QStringList lines = allText.split("\n");
 
         line = lines[currentLineInHistory];
         ui->edtInput->setText(line);
+        file.close();
     }
 }
 
@@ -467,9 +472,9 @@ void MainWindow::showManual(QString cmd)
 
         if (file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
-            QTextStream stream(&file);
-            stream.setCodec(codec);
-            manual = stream.readAll();
+            QTextStream in(&file);
+            in.setCodec(codec);
+            manual = in.readAll();
             file.close();
 
             info = "Manual del comando <" + cmd + ">";
@@ -480,3 +485,4 @@ void MainWindow::showManual(QString cmd)
     ui->lblInformation->setText(info);
     ui->stackedWidget->setCurrentIndex(0);
 }
+
