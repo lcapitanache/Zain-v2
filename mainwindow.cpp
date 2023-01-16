@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "QZXing.h"
 #include "alignedSqlQueryModel.h"
-
 #include <QClipboard>
 #include <QDateTime>
 #include <QDebug>
@@ -15,20 +14,28 @@
 #include <QTextStream>
 
 
+/********************************************************************
+ *
+ * Main Window
+ *
+ * ******************************************************************
+ */
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     setWindowIcon(QIcon(":img/logo-96.png"));
-    this->setStyleSheet("background-color: white;");
+    this->setStyleSheet("background-color: white;");    
 
     ui->setupUi(this);
-    ui->edtOutput->setReadOnly(true);
+    ui->edtOutput->setReadOnly(true);    
 
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("athena.db");
-
     showAllData();
+
+    setCurrentLineInHistory();
 }
 
 MainWindow::~MainWindow()
@@ -36,11 +43,40 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
+/********************************************************************
+ *
+ * Historial de comandos
+ *
+ * ******************************************************************
+ */
+
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_F1)
+    if (event->key() == Qt::Key_Up)
     {
-        qDebug() << "F1 - Ayuda";
+        if (currentLineInHistory == 1) { return; }
+
+        if (currentLineInHistory > 0)
+        {
+            currentLineInHistory--;
+            readFromHistory();
+        }
+    }
+    else if (event->key() == Qt::Key_Down)
+    {
+        if (currentLineInHistory == getHistoryTotalLines() - 1)
+        {
+            currentLineInHistory++;
+            ui->edtInput->clear();
+            return;
+        }
+
+        if (currentLineInHistory < getHistoryTotalLines() - 1)
+        {
+            currentLineInHistory++;
+            readFromHistory();
+        }
     }
     else
     {
@@ -48,226 +84,77 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void MainWindow::exitApp()
+void MainWindow::addToHistory(QString line)
 {
-    if (db.open())
-        db.close();
+    QFile file("history");
 
-    QApplication::quit();
-}
-
-void MainWindow::clearOutput()
-{
-    ui->edtOutput->clear();
-    ui->lblInformation->clear();
-
-    ui->stackedWidget->setCurrentIndex(0);
-}
-
-void MainWindow::showAboutInfo()
-{    
-    QString name = "<html><b>Zaín v2</b></html>";
-    QString year = QDateTime::currentDateTime().toString("yyyy");
-
-    QString about = "Sistema de captura de incapacidades\n\n" \
-                    "Instituto Mexicano del Seguro Social\n" \
-                    "Unidad de Medicina Familiar N.° 36\n\n" \
-                    "© " + year + " Luis Capitanache\n" \
-                    "lcapitanache@gmail.com\n" \
-                    "https://lcapitanache.github.io/\n\n" \
-                    "Qt " + QT_VERSION_STR + " | MinGW 53 | x86 | 32-bits";
-
-    ui->edtOutput->setText(name);
-    ui->edtOutput->append(about);
-
-    ui->lblInformation->setText("Acerca de Zaín v2");
-
-    ui->stackedWidget->setCurrentIndex(0);
-}
-
-void MainWindow::resizeColumnsAndRows()
-{
-    for (int i = 0; i <= model->columnCount(); i++)
+    if (file.open(QIODevice::WriteOnly | QIODevice::Append))
     {
-        ui->tblDataOutput->resizeColumnToContents(i);
-        ui->tblDataOutput->setColumnWidth(i, ui->tblDataOutput->columnWidth(i) + 20);
+        QTextStream stream(&file);
+        stream << endl << line;
     }
-
-    for (int i = 0; i <= model->rowCount(); i++)
-        ui->tblDataOutput->resizeRowToContents(i);
 }
 
-void MainWindow::showAllData()
+int MainWindow::getHistoryTotalLines()
 {
-    db.open();
+    int count = 0;
+    QFile file("history");
 
-    QSqlQuery *query = new QSqlQuery(db.databaseName());
-    query->prepare("SELECT * FROM incapacidades ORDER BY nss");
-    query->exec();
-
-    model = new AlignedSqlQueryModel(this);
-    model->setQuery(*query);
-
-    query->clear();
-    db.close();
-
-    QSortFilterProxyModel *proxy = new QSortFilterProxyModel(model);
-    proxy->setSourceModel(model);
-
-    ui->tblDataOutput->setSortingEnabled(true);
-    ui->tblDataOutput->setModel(proxy);
-    ui->tblDataOutput->hideColumn(0);
-
-    resizeColumnsAndRows();
-
-    ui->lblInformation->setText(QString::number(model->rowCount()) + " registros");
-    ui->stackedWidget->setCurrentIndex(2);
-}
-
-void MainWindow::showCheckDigit(QString nss)
-{
-    if (nssIsOK(nss))
-    {        
-        QString digit = QString::number(getCheckDigit(nss));
-
-        nss.insert(4, "-");
-        nss.insert(7, "-");
-
-        QString message = "Cálculo de dígito verificador\n\n" \
-                          "NSS:\t" + nss + "\n" \
-                          "Dígito:\t" + digit;
-
-        ui->edtOutput->setText(message);
-        ui->lblInformation->setText("Listo");
-    }
-    else
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        ui->edtOutput->clear();
-        ui->edtOutput->setText(nss + ": No es un NSS válido");
-        ui->lblInformation->setText("Error");
-    }
+        QTextStream in(&file);
 
-    ui->stackedWidget->setCurrentIndex(0);
-}
-
-void MainWindow::showFolio()
-{
-    QString folio = getFolio();
-
-    QPixmap QrCode(getQrCode(folio));
-    ui->lblQrCode->setPixmap(QrCode);
-    ui->lblQrCode->setScaledContents(true);
-
-    ui->lblFolio->setText(folio);
-
-    ui->lblInformation->setText("Listo");
-    ui->stackedWidget->setCurrentIndex(1);
-}
-
-void MainWindow::showManual(QString cmd)
-{
-    QFile file(":help/" + cmd + ".man");
-    QString manual;
-    QString info;
-
-    if (!file.exists())
-    {
-        manual = "man: Sin entrada en el manual para <" + cmd + ">";
-        info = "Error";
-    }
-    else
-    {
-        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        while (!in.atEnd())
         {
-            QTextStream stream(&file);
-            stream.setCodec(codec);
-            manual = stream.readAll();
-            file.close();
-
-            info = "Manual del comando <" + cmd + ">";
-        }
-    }    
-
-    //ui->edtOutput->setPlainText(manual);
-    ui->edtOutput->setHtml(manual);
-    ui->lblInformation->setText(info);
-    ui->stackedWidget->setCurrentIndex(0);
-}
-
-QString MainWindow::getFolio()
-{
-    QDateTime now = QDateTime::currentDateTime();
-    QLocale local = QLocale(QLocale::Spanish, QLocale::Mexico);
-
-    QString folio = "JSMF/" + local.toString(now, "yyyy.MM.dd") + "/"
-                    + QString::number(now.date().dayOfWeek()) + "."
-                    + local.toString(now, "hhmmss");
-
-    QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->setText(folio);
-
-    return folio;
-}
-
-QString MainWindow::getQrCode(QString folio)
-{
-    QImage qrCode = QZXing::encodeData(folio);
-
-    folio.replace(QString("/"), QString("-"));
-    qrCode.save(folio + ".jpg");
-
-    return folio + ".jpg";
-}
-
-bool MainWindow::nssIsOK(QString nss)
-{
-    QRegExp re("\\d*");
-
-    return (re.exactMatch(nss) && (nss.size() == 10));
-}
-
-int MainWindow::getCheckDigit(QString nss)
-{
-    int tmp = 0;
-    int sumatory = 0;
-    int topTen = 0;
-    int checkDigit = 0;
-
-    for (int i = 0; i<= 9; i++)
-    {
-        tmp = nss.at(i).digitValue();
-
-        if (i % 2 != 0)
-        {
-            tmp *= 2;
-
-            if (tmp > 9)
-                tmp -= 9;
+            in.readLine();
+            count++;
         }
 
-        sumatory += tmp;
+        file.close();
     }
 
-    topTen = ((sumatory/10) + 1) * 10;
-
-    checkDigit = topTen - sumatory;
-
-    if (checkDigit == 10)
-        checkDigit = 0;
-
-    return checkDigit;
+    return count;
 }
+
+void MainWindow::readFromHistory()
+{
+    QFile file("history");
+    QString line = "";
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream stream(&file);
+        QString allText = stream.readAll();
+        QStringList lines = allText.split("\n");
+
+        line = lines[currentLineInHistory];
+        ui->edtInput->setText(line);
+    }
+}
+
+void MainWindow::setCurrentLineInHistory()
+{
+    currentLineInHistory = getHistoryTotalLines();
+}
+
+
+/********************************************************************
+ *
+ * Entrada de comandos
+ *
+ * ******************************************************************
+ */
 
 void MainWindow::on_edtInput_returnPressed()
 {
     lastInput = ui->edtInput->text().simplified().toLower();
+    addToHistory(lastInput);
     ui->edtInput->clear();
 
     if (lastInput.length() == 0) { return; }
 
     checkCommand();
+    setCurrentLineInHistory();
 }
 
 void MainWindow::checkCommand()
@@ -329,7 +216,7 @@ bool MainWindow::numOfArgsIsOK(QString cmd, int expectedNumArgs, int numArgsPass
 void MainWindow::executeCommand(int cmd, QString argument)
 {
     switch(cmd)
-    {        
+    {
         case 0: showAboutInfo(); break;
         case 1: showAllData(); break;
         case 2: showCheckDigit(argument); break;
@@ -338,4 +225,258 @@ void MainWindow::executeCommand(int cmd, QString argument)
         case 5: showFolio(); break;
         case 6: showManual(argument); break;
     }
+}
+
+
+/********************************************************************
+ *
+ * Comandos
+ *
+ * ******************************************************************
+ */
+
+
+// - - - - - - - - -
+// uname
+// - - - - - - - - -
+
+void MainWindow::showAboutInfo()
+{
+    QString name = "<html><b>Zaín v2</b></html>";
+    QString year = QDateTime::currentDateTime().toString("yyyy");
+
+    QString about = "Sistema de captura de incapacidades\n\n" \
+                    "Instituto Mexicano del Seguro Social\n" \
+                    "Unidad de Medicina Familiar N.° 36\n\n" \
+                    "© " + year + " Luis Capitanache\n" \
+                    "lcapitanache@gmail.com\n" \
+                    "https://lcapitanache.github.io/\n\n" \
+                    "Qt " + QT_VERSION_STR + " | MinGW 53 | x86 | 32-bits";
+
+    ui->edtOutput->setText(name);
+    ui->edtOutput->append(about);
+
+    ui->lblInformation->setText("Acerca de Zaín v2");
+
+    ui->stackedWidget->setCurrentIndex(0);
+}
+
+
+// - - - - - - - - -
+// itt
+// - - - - - - - - -
+
+void MainWindow::showAllData()
+{
+    db.open();
+
+    QSqlQuery *query = new QSqlQuery(db.databaseName());
+    query->prepare("SELECT * FROM incapacidades ORDER BY nss");
+    query->exec();
+
+    model = new AlignedSqlQueryModel(this);
+    model->setQuery(*query);
+
+    query->clear();
+    db.close();
+
+    QSortFilterProxyModel *proxy = new QSortFilterProxyModel(model);
+    proxy->setSourceModel(model);
+
+    ui->tblDataOutput->setSortingEnabled(true);
+    ui->tblDataOutput->setModel(proxy);
+    ui->tblDataOutput->hideColumn(0);
+
+    resizeColumnsAndRows();
+
+    ui->lblInformation->setText(QString::number(model->rowCount()) + " registros");
+    ui->stackedWidget->setCurrentIndex(2);
+}
+
+void MainWindow::resizeColumnsAndRows()
+{
+    for (int i = 0; i <= model->columnCount(); i++)
+    {
+        ui->tblDataOutput->resizeColumnToContents(i);
+        ui->tblDataOutput->setColumnWidth(i, ui->tblDataOutput->columnWidth(i) + 20);
+    }
+
+    for (int i = 0; i <= model->rowCount(); i++)
+        ui->tblDataOutput->resizeRowToContents(i);
+}
+
+
+// - - - - - - - - -
+// dof
+// - - - - - - - - -
+
+void MainWindow::showCheckDigit(QString nss)
+{
+    if (nssIsOK(nss))
+    {
+        QString digit = QString::number(getCheckDigit(nss));
+
+        nss.insert(4, "-");
+        nss.insert(7, "-");
+
+        QString message = "Cálculo de dígito verificador\n\n" \
+                          "NSS:\t" + nss + "\n" \
+                          "Dígito:\t" + digit;
+
+        ui->edtOutput->setText(message);
+        ui->lblInformation->setText("Listo");
+    }
+    else
+    {
+        ui->edtOutput->clear();
+        ui->edtOutput->setText(nss + ": No es un NSS válido");
+        ui->lblInformation->setText("Error");
+    }
+
+    ui->stackedWidget->setCurrentIndex(0);
+}
+
+bool MainWindow::nssIsOK(QString nss)
+{
+    QRegExp re("\\d*");
+
+    return (re.exactMatch(nss) && (nss.size() == 10));
+}
+
+int MainWindow::getCheckDigit(QString nss)
+{
+    int tmp = 0;
+    int sumatory = 0;
+    int topTen = 0;
+    int checkDigit = 0;
+
+    for (int i = 0; i<= 9; i++)
+    {
+        tmp = nss.at(i).digitValue();
+
+        if (i % 2 != 0)
+        {
+            tmp *= 2;
+
+            if (tmp > 9)
+                tmp -= 9;
+        }
+
+        sumatory += tmp;
+    }
+
+    topTen = ((sumatory/10) + 1) * 10;
+
+    checkDigit = topTen - sumatory;
+
+    if (checkDigit == 10)
+        checkDigit = 0;
+
+    return checkDigit;
+}
+
+
+// - - - - - - - - -
+// clear
+// - - - - - - - - -
+
+void MainWindow::clearOutput()
+{
+    ui->edtOutput->clear();
+    ui->lblInformation->clear();
+
+    ui->stackedWidget->setCurrentIndex(0);
+}
+
+
+// - - - - - - - - -
+// quit
+// - - - - - - - - -
+
+void MainWindow::exitApp()
+{
+    if (db.open())
+        db.close();
+
+    QApplication::quit();
+}
+
+
+// - - - - - - - - -
+// fol
+// - - - - - - - - -
+
+void MainWindow::showFolio()
+{
+    QString folio = getFolio();
+
+    QPixmap QrCode(getQrCode(folio));
+    ui->lblQrCode->setPixmap(QrCode);
+    ui->lblQrCode->setScaledContents(true);
+
+    ui->lblFolio->setText(folio);
+
+    ui->lblInformation->setText("Listo");
+    ui->stackedWidget->setCurrentIndex(1);
+}
+
+QString MainWindow::getFolio()
+{
+    QDateTime now = QDateTime::currentDateTime();
+    QLocale local = QLocale(QLocale::Spanish, QLocale::Mexico);
+
+    QString folio = "JSMF/" + local.toString(now, "yyyy.MM.dd") + "/"
+                    + QString::number(now.date().dayOfWeek()) + "."
+                    + local.toString(now, "hhmmss");
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(folio);
+
+    return folio;
+}
+
+QString MainWindow::getQrCode(QString folio)
+{
+    QImage qrCode = QZXing::encodeData(folio);
+
+    folio.replace(QString("/"), QString("-"));
+    qrCode.save(folio + ".jpg");
+
+    return folio + ".jpg";
+}
+
+
+// - - - - - - - - -
+// man
+// - - - - - - - - -
+
+void MainWindow::showManual(QString cmd)
+{
+    QFile file(":help/" + cmd);
+    QString manual;
+    QString info;
+
+    if (!file.exists())
+    {
+        manual = "man: Sin entrada en el manual para <" + cmd + ">";
+        info = "Error";
+    }
+    else
+    {
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream stream(&file);
+            stream.setCodec(codec);
+            manual = stream.readAll();
+            file.close();
+
+            info = "Manual del comando <" + cmd + ">";
+        }
+    }
+
+    ui->edtOutput->setHtml(manual);
+    ui->lblInformation->setText(info);
+    ui->stackedWidget->setCurrentIndex(0);
 }

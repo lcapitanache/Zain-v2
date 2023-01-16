@@ -19,6 +19,7 @@ class MainWindow : public QMainWindow
 public:
     QSqlDatabase db;    
     QString lastInput;
+    int currentLineInHistory;
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -37,11 +38,15 @@ private slots:
     bool nssIsOK(QString s);
 
     //Funciones    
+    void addToHistory(QString line);
     void checkCommand();
     void executeCommand(int cmd, QString argument);
     int getCheckDigit(QString s);
     QString getFolio();
+    int getHistoryTotalLines();
     QString getQrCode(QString folio);    
+    void readFromHistory();
+    void setCurrentLineInHistory();
 
     //Métodos
     void clearOutput();
