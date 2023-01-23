@@ -37,27 +37,29 @@ private slots:
     bool numOfArgsIsOK(QString cmd, int expectedNumArgs, int numArgsPassed);
     bool nssIsOK(QString s);
 
-    //Funciones    
-    void addToHistory(QString line);
-    void checkCommand();
-    void executeCommand(int cmd, QString argument);
+    //Funciones            
     int getCheckDigit(QString s);
-    QString getFolio();
     int getHistoryTotalLines();
-    QString getQrCode(QString folio);    
-    void readFromHistory();
-    void setCurrentLineInHistory();
+    QString getFolio();
+    QString getQrCode(QString folio);        
 
     //Métodos
+    void addToHistory(QString line);
+    void checkCommand();
     void clearOutput();
-    void exitApp();
+    void executeCommand(int cmd, QString argument);
+    void exitApp();        
+    void readFromHistory();
     void resizeColumnsAndRows();
+    void setCurrentLineInHistory();
 
     //Métodos de mensaje
     void showAboutInfo();
     void showAllData();
     void showCheckDigit(QString s);
     void showFolio();
+    void showHelp();
+    void showHistory();
     void showManual(QString cmd);
 
 private:

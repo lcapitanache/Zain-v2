@@ -1,0 +1,22 @@
+<html>
+	<b>LISTA DE COMANDOS</b>
+	<br>
+	&nbsp;&nbsp;&nbsp;
+	<ol>
+		<li><b>cls</b> - Limpia la pantalla</li>
+		<br>
+		<li><b>dof</b> [nss] - Calcula un dígito verificador</li>
+		<br>
+		<li><b>fol</b> - Genera un número de folio</li>
+		<br>
+		<li><b>history</b> [-c] - Muestra el historial de comandos</li>
+		<br>
+		<li><b>itt</b> - Enlista todas las ITT registradas</li>
+		<br>
+		<li><b>man</b> [comando] - Muestra el manual de un comando</li>
+		<br>
+		<li><b>quit</b> - Sale de la aplicación</li>
+		<br>
+		<li><b>uname</b> - Muestra información de la aplicación</li>
+	</ol>
+<html>

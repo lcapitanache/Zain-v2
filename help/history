@@ -1,0 +1,17 @@
+<html>
+	<p><b>NOMBRE</b></p>
+	<p>&nbsp;&nbsp;&nbsp;history - Historial de comandos</p>
+	<br>
+	<p><b>SINOPSIS</b></p>
+	<p>&nbsp;&nbsp;&nbsp;history [-c]</p>
+	<br>
+	<p><b>DESCRIPCIÓN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Muestra el historial de comandos</p>
+	<br>
+	<p><b>OPCIONES</b></p>
+	<p>&nbsp;&nbsp;&nbsp;-c</p>
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;limpia el historial de comandos</p>	
+	<br>
+	<p><b>VÉASE TAMBIÉN</b></p>
+	<p>&nbsp;&nbsp;&nbsp;Sin comandos directamente relacionados</p>
+</html>

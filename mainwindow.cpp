@@ -85,6 +85,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             QWidget::keyPressEvent(event);
         }
     }
+
+    if (event->key() == Qt::Key_F1)
+    {
+        showHelp();
+    }
 }
 
 void MainWindow::addToHistory(QString line)
@@ -142,6 +147,37 @@ void MainWindow::setCurrentLineInHistory()
     currentLineInHistory = getHistoryTotalLines();
 }
 
+void MainWindow::showHistory()
+{
+    QFile file("history");
+    QString history;
+    QString info;
+
+    if (!file.exists())
+    {
+        history = "err: Historial de comandos no encontrado.";
+        info = "Error";
+    }
+    else
+    {
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&file);
+            in.setCodec(codec);
+            history = in.readAll();
+            file.close();
+
+            info = "Historial de comandos";
+        }
+    }
+
+    ui->edtOutput->setText(history);
+    ui->lblInformation->setText(info);
+    ui->stackedWidget->setCurrentIndex(0);
+}
+
 
 /********************************************************************
  *
@@ -153,13 +189,14 @@ void MainWindow::setCurrentLineInHistory()
 void MainWindow::on_edtInput_returnPressed()
 {
     lastInput = ui->edtInput->text().simplified().toLower();
-    addToHistory(lastInput);
     ui->edtInput->clear();
 
     if (lastInput.length() == 0) { return; }
 
-    checkCommand();
+    addToHistory(lastInput);    
     setCurrentLineInHistory();
+
+    checkCommand();    
 }
 
 void MainWindow::checkCommand()
@@ -168,10 +205,10 @@ void MainWindow::checkCommand()
             {"uname", 0},      {"itt", 1},
             {"dof", 2},        {"cls", 3},
             {"quit", 4},       {"fol", 5},
-            {"man", 6},
+            {"man", 6},        {"history", 7}
         };
 
-    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1};
+    const int numArgs[] = {0, 0, 1, 0, 0, 0, 1, 0};
 
     QStringList input = lastInput.split(" ");
     QString cmd = input.value(0);
@@ -229,6 +266,7 @@ void MainWindow::executeCommand(int cmd, QString argument)
         case 4: exitApp(); break;
         case 5: showFolio(); break;
         case 6: showManual(argument); break;
+        case 7: showHistory(); break;
     }
 }
 
@@ -276,7 +314,8 @@ void MainWindow::showAllData()
     db.open();
 
     QSqlQuery *query = new QSqlQuery(db.databaseName());
-    query->prepare("SELECT * FROM incapacidades ORDER BY nss");
+    query->prepare("SELECT * FROM incapacidades");
+
     query->exec();
 
     model = new AlignedSqlQueryModel(this);
@@ -486,3 +525,41 @@ void MainWindow::showManual(QString cmd)
     ui->stackedWidget->setCurrentIndex(0);
 }
 
+
+/********************************************************************
+ *
+ * Ayuda
+ *
+ * ******************************************************************
+ */
+
+void MainWindow::showHelp()
+{
+    QFile file(":help/help");
+    QString ayuda;
+    QString info;
+
+    if (!file.exists())
+    {
+        ayuda = "err: Archivo de ayuda no encontrado.";
+        info = "Error";
+    }
+    else
+    {
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QTextStream in(&file);
+            in.setCodec(codec);
+            ayuda = in.readAll();
+            file.close();
+
+            info = "Ayuda";
+        }
+    }
+
+    ui->edtOutput->setHtml(ayuda);
+    ui->lblInformation->setText(info);
+    ui->stackedWidget->setCurrentIndex(0);
+}
